@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-HK"> 
+  <head> 
+    <meta charset="UTF-8" /> 
+    <title>香港薪俸稅計算器 (專業版)</title> 
+    <style>
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f6f8; margin: 0; padding: 0; }
+    header { background: linear-gradient(90deg, #004080, #0073e6); color: white; padding: 20px; text-align: center; }
+    header h1 { margin: 0; font-size: 28px; }
+    .container { max-width: 900px; margin: 30px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    section { margin-bottom: 25px; border-bottom: 1px solid #ddd; padding-bottom: 15px; }
+    section h2 { color: #004080; font-size: 20px; margin-bottom: 10px; }
+    label { display: block; margin-top: 10px; font-weight: 500; }
+    input, select { margin-top: 5px; padding: 8px; width: 250px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+    button { margin-top: 20px; padding: 12px 25px; background-color: #0073e6; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+    button:hover { background-color: #005bb5; }
+    .result { margin-top: 25px; font-weight: bold; color: #004d00; font-size: 18px; background: #e8f5e9; padding: 15px; border-radius: 6px; }
+    footer { text-align: center; padding: 15px; font-size: 14px; color: #666; margin-top: 30px; }
+</style> 
+  </head> 
+  <body> 
+    <header> 
+      <h1>香港薪俸稅計算器 (2024/25 專業版)</h1> 
+    </header> 
+    <div class="container"> 
+      <section> 
+        <h2>個人資料</h2> <label>全年入息 (港幣): <input type="number" id="income" /></label> <label>婚姻狀況: <select id="married"><option value="0">單身</option><option value="264000">已婚</option></select></label> 
+      </section> 
+      <section> 
+        <h2>扣除項目</h2> <label>個人進修開支 (上限 HK$100,000): <input type="number" id="education" value="0" /></label> <label>認可慈善捐款 (上限入息淨額35%): <input type="number" id="donation" value="0" /></label> <label>強積金強制性供款 (上限 HK$18,000): <input type="number" id="mpf" value="0" /></label> <label>可扣稅強積金自願性供款: <input type="number" id="volMPF" value="0" /></label> <label>合資格年金保費 (上限 HK$60,000): <input type="number" id="annuity" value="0" /></label> <label>合資格醫療保險保費 (每名上限 HK$8,000): <input type="number" id="vhis" value="0" /></label> <label>輔助生育服務開支 (上限 HK$100,000): <input type="number" id="fertility" value="0" /></label> <label>居所貸款利息 (上限 HK$120,000): <input type="number" id="mortgage" value="0" /></label> <label>住宅租金扣除 (上限 HK$120,000): <input type="number" id="rent" value="0" /></label> <label>長者住宿照顧開支 (上限 HK$100,000): <input type="number" id="elderCare" value="0" /></label> 
+      </section> 
+      <section> 
+        <h2>免稅額</h2> <label>基本免稅額: 自動包括 HK$132,000</label> <label>單親免稅額: <select id="singleParent"><option value="0">否</option><option value="132000">是</option></select></label> <label>傷殘人士免稅額: <select id="disabled"><option value="0">否</option><option value="75000">是</option></select></label> <label>傷殘受養人人數 (每名 HK$75,000): <input type="number" id="disabledDep" min="0" value="0" /></label> <label>子女人數 (每名 HK$130,000): <input type="number" id="children" min="0" value="0" /></label> <label>出生年度額外子女人數 (每名 HK$130,000): <input type="number" id="newborn" min="0" value="0" /></label> <label>供養兄弟姊妹人數 (每名 HK$37,500): <input type="number" id="siblings" min="0" value="0" /></label> <label>供養父母/祖父母 (60歲或以上) 人數 (每名 HK$50,000): <input type="number" id="parents60" min="0" value="0" /></label> <label>供養父母/祖父母 (55-59歲) 人數 (每名 HK$25,000): <input type="number" id="parents55" min="0" value="0" /></label> 
+      </section> <button onclick="calculateTax()">計算稅款</button> 
+      <div class="result" id="result"></div> 
+    </div> 
+    <footer>
+       © 2024 香港薪俸稅計算器 | 參照稅務局規定 
+    </footer> 
+    <script>
+function calculateTax() {
+    let income = parseFloat(document.getElementById('income').value) || 0;
+
+    // Allowances
+    let allowances = 132000; // 基本免稅額
+    allowances += parseFloat(document.getElementById('married').value);
+    allowances += parseFloat(document.getElementById('singleParent').value);
+    allowances += parseFloat(document.getElementById('disabled').value);
+    allowances += (parseInt(document.getElementById('disabledDep').value) || 0) * 75000;
+    allowances += (parseInt(document.getElementById('children').value) || 0) * 130000;
+    allowances += (parseInt(document.getElementById('newborn').value) || 0) * 130000;
+    allowances += (parseInt(document.getElementById('siblings').value) || 0) * 37500;
+    allowances += (parseInt(document.getElementById('parents60').value) || 0) * 50000;
+    allowances += (parseInt(document.getElementById('parents55').value) || 0) * 25000;
+
+    // Deductions with caps
+    function cap(val, max) { return val > max ? max : val; }
+    let deductions = 0;
+    deductions += cap(parseFloat(document.getElementById('education').value) || 0, 100000);
+    deductions += cap(parseFloat(document.getElementById('mpf').value) || 0, 18000);
+    deductions += cap(parseFloat(document.getElementById('volMPF').value) || 0, 60000);
+    deductions += cap(parseFloat(document.getElementById('annuity').value) || 0, 60000);
+    deductions += cap(parseFloat(document.getElementById('vhis').value) || 0, 8000);
+    deductions += cap(parseFloat(document.getElementById('fertility').value) || 0, 100000);
+    deductions += cap(parseFloat(document.getElementById('mortgage').value) || 0, 120000);
+    deductions += cap(parseFloat(document.getElementById('rent').value) || 0, 120000);
+    deductions += cap(parseFloat(document.getElementById('elderCare').value) || 0, 100000);
+
+    let netIncomeBeforeDonation = income - deductions;
+    let donation = parseFloat(document.getElementById('donation').value) || 0;
+    let donationCap = netIncomeBeforeDonation * 0.35;
+    deductions += cap(donation, donationCap);
+
+    let netChargeableIncome = income - deductions - allowances;
+    if (netChargeableIncome < 0) netChargeableIncome = 0;
+
+    // Progressive tax calculation
+    let progressiveTax = 0;
+    let remaining = netChargeableIncome;
+    let brackets = [50000, 50000, 50000, 50000];
+    let rates = [0.02, 0.06, 0.10, 0.14];
+
+    for (let i = 0; i < brackets.length; i++) {
+        if (remaining > brackets[i]) {
+            progressiveTax += brackets[i] * rates[i];
+            remaining -= brackets[i];
+        } else {
+            progressiveTax += remaining * rates[i];
+            remaining = 0;
+            break;
+        }
+    }
+    if (remaining > 0) {
+        progressiveTax += remaining * 0.17;
+    }
+
+    // Standard tax calculation
+    let standardTax = income * 0.15;
+    if (income > 5000000) {
+        standardTax = 5000000 * 0.15 + (income - 5000000) * 0.16;
+    }
+
+    let taxBeforeRelief = Math.min(progressiveTax, standardTax);
+
+    // Apply tax reduction (max HK$1,500)
+    let finalTax = taxBeforeRelief - Math.min(taxBeforeRelief, 1500);
+
+    document.getElementById('result').innerHTML = `免稅額總計: HK$${allowances.toLocaleString()}<br>扣除總計: HK$${deductions.toLocaleString()}<br>應課稅入息: HK$${netChargeableIncome.toLocaleString()}<br>應繳稅款: HK$${finalTax.toFixed(2)} (已包括稅款寬減)`;
+}
+</script>  
+  </body>
+</html>
